@@ -376,10 +376,23 @@ class VirtualPinballPlatform(LightsPlatform, SwitchPlatform, DriverPlatform):
     def parse_light_number_to_channels(self, number: str, subtype: str):
         """Parse channel str to a list of channels."""
         # pylint: disable-msg=no-else-return
-        if subtype in ("gi", "matrix", "led", "flasher") or not subtype:
+
+        if subtype in ("gi", "matrix", "simple", "incand") or not subtype:
             return [
                 {
                     "number": str(number)
+                }
+            ]
+        if subtype == "led" or not subtype:
+            return [
+                {
+                    "number": str(number) + "-r",
+                },
+                {
+                    "number": str(number) + "-g",
+                },
+                {
+                    "number": str(number) + "-b",
                 }
             ]
         else:
