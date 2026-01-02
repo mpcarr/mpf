@@ -214,7 +214,7 @@ class FastBreakoutBoard:
 
     def __repr__(self):
         """Return representation of the breakout board."""
-        return f"Breakout {self.model} on {self.expansion_board}"
+        return f"Breakout {self.model} @{self.address} on {self.expansion_board}"
 
     def _initialize(self, **kwargs):
         """Populate the LED objects."""
@@ -232,7 +232,15 @@ class FastBreakoutBoard:
     async def soft_reset(self):
         """Reset the breakout board."""
         self.communicator.send_and_forget(f'RA@{self.address}:000000')
+
         await asyncio.sleep(.03)
+        self._configure_led_headers()
 
         # Should we do something with servos? TODO
         # TODO move this to mixin classes for device types?
+
+    def _configure_led_headers(self):
+        self.communicator.send_with_confirmation(f'ER@{self.address}:0,0,0,20',  'ER:P')
+        self.communicator.send_with_confirmation(f'ER@{self.address}:1,0,20,20', 'ER:P')
+        self.communicator.send_with_confirmation(f'ER@{self.address}:2,0,40,20', 'ER:P')
+        self.communicator.send_with_confirmation(f'ER@{self.address}:3,0,60,20', 'ER:P')
