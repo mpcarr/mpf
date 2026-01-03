@@ -7,6 +7,7 @@ from importlib import import_module
 
 from packaging import version
 
+from mpf.core.utility_functions import Util
 from mpf.platforms.fast.fast_defines import (BREAKOUT_FEATURES,
                                              EXPANSION_BOARD_FEATURES)
 
@@ -241,7 +242,33 @@ class FastBreakoutBoard:
         # TODO move this to mixin classes for device types?
 
     def _configure_led_headers(self):
-        self.communicator.send_with_confirmation(f'ER@{self.address}:0,0,0,20',  'ER:P')
-        self.communicator.send_with_confirmation(f'ER@{self.address}:1,0,20,20', 'ER:P')
-        self.communicator.send_with_confirmation(f'ER@{self.address}:2,0,40,20', 'ER:P')
-        self.communicator.send_with_confirmation(f'ER@{self.address}:3,0,60,20', 'ER:P')
+        port_led_counts = [32, 32, 32, 32]
+        leds_available = 128
+        next_address = 0
+        for port_number, count in enumerate(port_led_counts):
+            if count <= leds_available:
+                self._configure_led_header(port_number, 'ws2182', next_address, count)
+                leds_available -= count
+                next_address += count
+            else:
+                raise Exception("Port tried to use too many leds, max per breakout is 128 leds")  #TODO improve message
+
+    def _configure_led_header(self, port_number, type, offset, light_count):
+        type_number = {
+            'ws2182': 0,
+            'sk6812': 1,
+            'mixed': 2,
+            'apa102': 3,
+        }.get(type, 0)
+
+        count_hex = Util.int_to_hex_string(light_count)
+        offset_hex = Util.int_to_hex_string(offset)
+        rgbw_overrides = ''  # Future: empty if none, else a comma and a list of hex addresses separated by commas
+
+        ### Command: ER - @ Breakout address : port 0-3, type #, starting LED # hex, count hex[, rgbw-unit-address]
+        ### Fresh board state is equivalent to ER:0,0,0,20  ER:1,0,20,20 etc
+        ### The rgb-unit-address is any additional hex address numbers for a mixed chain where the unit should be set to the command type (arg#2)
+        ### ^ are based on the first address in the chain, so 0 means the same in the overall 128 light address space as the offset_hex value
+        message = f'ER@{self.address}:{port_number},{type_number},{offset_hex},{count_hex}{rgbw_overrides}'
+        self.log.debug("Sending LED port config to breakout. %s", message)
+        self.communicator.send_with_confirmation(message, 'ER:P')
