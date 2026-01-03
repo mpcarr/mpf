@@ -668,11 +668,10 @@ fast_exp_board:
 fast_breakout:
     port: single|enum(1,2,3)|
     model: single|str|
-    led_ports: list|subconfig(fast_led_port)|None
 fast_led_port:
-    port: single|str|
-    type: single|enum(ws2812,apa-102)|ws2812
-    leds: single|int|32
+    port: single|int|
+    type: single|enum(ws2812,apa-102,sk6812,mixed)|ws2812
+    count: single|int|32
 fast_aud:
     port: list|str|auto
     baud: single|int|230400

@@ -619,6 +619,19 @@ class FastHardwarePlatform(ServoPlatform, LightsPlatform, RgbDmdPlatform,
             _, breakout, port, led = parts
             breakout = breakout.strip('b')
 
+        lights_before_port = 0
+        light_count_on_port = exp_board.light_count_on_port(port)
+        port_number = int(port)
+        range_end = port_number
+        if port_number <= 4:
+            range_start = 1
+        else:
+            range_start = 5
+        idx = range_start
+        while idx < range_end:
+            lights_before_port += exp_board.light_count_on_port(idx)
+            idx += 1
+
         # ports are always 1-4, but some EXP boards have more which are labeled 5-8
         # Those are really 1-4 of the next breakout board, so if we get a port > 4
         # then sort it out to the real internal values
@@ -633,7 +646,7 @@ class FastHardwarePlatform(ServoPlatform, LightsPlatform, RgbDmdPlatform,
             # TODO change to mpf config exception
             raise AssertionError(f'Board {exp_board} does not have a config entry for Breakout {breakout}')
 
-        index = self.port_idx_to_hex(port, led, 32, name)
+        index = self.port_idx_to_hex(port, led, light_count_on_port, lights_before_port, name)
         this_led_number = f'{brk_board.address}{index}'
 
         # this code runs once for each channel, so it will be called 3x per LED which
@@ -663,7 +676,7 @@ class FastHardwarePlatform(ServoPlatform, LightsPlatform, RgbDmdPlatform,
 
     def _add_nano_led(self, parts, channel):
         try:
-            number = self.port_idx_to_hex(parts[0], parts[1], 64)
+            number = self.nano_port_idx_to_hex(parts[0], parts[1])
         except IndexError:
             # this is a legacy LED number as an int
             number = f'{int(parts[0]):02X}'
@@ -679,7 +692,27 @@ class FastHardwarePlatform(ServoPlatform, LightsPlatform, RgbDmdPlatform,
         self.fast_rgb_leds[number].add_channel(int(channel), fast_led_channel)
         return fast_led_channel
 
-    def port_idx_to_hex(self, port, device_num, devices_per_port, name=None):
+    def nano_port_idx_to_hex(self, port, device_num):
+        """Converts port number and LED index into the Nano FAST hex number.
+
+        port: the LED port number printed on the board. First port is 1. No zeros.
+        device_num: LED position in the change, First LED is 1. No zeros.
+
+        Returns: FAST hex string for the LED
+        """
+        port = int(port)
+        device_num = int(device_num)
+        if device_num < 1:
+            raise AssertionError(f"Device number {device_num} is not valid for Nano light device. "
+                                 "The first device in the chain should be 1, not 0")
+        if port < 1:
+            raise AssertionError(f"Port {port} is not valid for device {device_num}")
+        if device_num > 64:
+            raise AssertionError(f"Device number {device_num} exceeds the number of devices on port ({devices_on_port})")
+
+        return f'{(64 * (port - 1) + device_num - 1):02X}'
+
+    def port_idx_to_hex(self, port, device_num, devices_on_port, devices_on_previous_ports, name=None):
         """Converts port number and LED index into the proper FAST hex number.
 
         port: the LED port number printed on the board. First port is 1. No zeros.
@@ -699,17 +732,15 @@ class FastHardwarePlatform(ServoPlatform, LightsPlatform, RgbDmdPlatform,
         if port < 1:
             raise AssertionError(f"Port {port} is not valid for device {device_num}")
 
-        if device_num > devices_per_port:
+        if device_num > devices_on_port:
             if name:
-                self.raise_config_error(f"Device number {device_num} exceeds the number of devices per port "
-                                        f"({devices_per_port}) for LED {name}", 9)
+                self.raise_config_error(f"Device number {device_num} exceeds the number of devices on port "
+                                        f"({devices_on_port}) for LED {name}", 9)
             else:
-                raise AssertionError(f"Device number {device_num} exceeds the number of devices per port "
-                                     f"({devices_per_port})")
+                raise AssertionError(f"Device number {device_num} exceeds the number of devices on port "
+                                     f"({devices_on_port})")
 
-        port_offset = (port - 1) * devices_per_port
-        device_num = device_num - 1
-        return f'{(port_offset + device_num):02X}'
+        return f'{(devices_on_previous_ports + device_num - 1):02X}'
 
     def parse_light_number_to_channels(self, number: str, subtype: str = "led"):
         """Transform an MPF config light number to a FAST channel.
@@ -782,7 +813,7 @@ class FastHardwarePlatform(ServoPlatform, LightsPlatform, RgbDmdPlatform,
         if '-' in str(number):
             # num = list(map(int, str(number).split('-')))
             # index = num[0] * 64 + num[1]
-            index = int(self.port_idx_to_hex(parts[0], parts[1], 64), 16)
+            index = int(self.nano_port_idx_to_hex(parts[0], parts[1]), 16)
         else:
             index = int(number)
 

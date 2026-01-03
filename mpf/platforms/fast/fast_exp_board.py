@@ -186,6 +186,28 @@ class FastExpansionBoard:
         self.led_fade_rate = rate
         self.communicator.set_led_fade_rate(self.address, rate)
 
+    def led_port_definition(self, human_readable_port_number):
+        '''Looks up light port configuration for ports numbered: 1-8, or returns a default fallback.'''
+
+        port_information = {  # default configuration
+            'port': human_readable_port_number,
+            'type': 'ws2812',
+            'count': 32
+        }
+        led_port_configs = self.config['led_ports']
+        if len(led_port_configs) > 0:
+            for port_config in led_port_configs:
+                if int(port_config['port']) == int(human_readable_port_number):
+                    port_information['type'] = port_config['type']
+                    port_information['count'] = port_config['count']
+                    break
+
+        return port_information
+
+    def light_count_on_port(self, human_readable_port_number):
+        '''Looks up the number of lights configured to be on a certain light port: 1-8.'''
+        return self.led_port_definition(human_readable_port_number)['count']
+
 
 class FastBreakoutBoard:
 
@@ -199,7 +221,7 @@ class FastBreakoutBoard:
         self.config = config
         self.expansion_board = expansion_board  # object
         self.log = expansion_board.log
-        self.index = config['port']  # int, zero-based, 0-5
+        self.index = int(config['port'])  # int, zero-based, 0-5
         self.log.debug("Creating FAST Breakout Board %s on %s", self.index, self.expansion_board)
         self.platform = expansion_board.platform
         self.communicator = expansion_board.communicator
@@ -241,19 +263,32 @@ class FastBreakoutBoard:
         # Should we do something with servos? TODO
         # TODO move this to mixin classes for device types?
 
+    def _led_ports(self):
+        port_count = self.features.get('led_ports')
+        if port_count:
+            return [self._led_port(internal_port_number) for internal_port_number in range(port_count)]
+
+    def _led_port(self, internal_port_number):
+        human_readable_port_number = self.index * 4 + internal_port_number + 1
+        return self.expansion_board.led_port_definition(human_readable_port_number)
+
     def _configure_led_headers(self):
-        port_led_counts = [32, 32, 32, 32]
         leds_available = 128
         next_address = 0
-        for port_number, count in enumerate(port_led_counts):
+        for port in self._led_ports():
+            human_readable_port_number = port['port']
+            internal_port_number = (human_readable_port_number - 1) % 4
+            type = port['type']
+            count = port['count']
             if count <= leds_available:
-                self._configure_led_header(port_number, 'ws2182', next_address, count)
+                mixed_rgbw_offsets = self._find_mixed_rgbw_offsets(internal_port_number, type)
+                self._configure_led_header(internal_port_number, type, next_address, count, mixed_rgbw_offsets)
                 leds_available -= count
                 next_address += count
             else:
                 raise Exception("Port tried to use too many leds, max per breakout is 128 leds")  #TODO improve message
 
-    def _configure_led_header(self, port_number, type, offset, light_count):
+    def _configure_led_header(self, port_number, type, offset, light_count, mixed_override_offsets):
         type_number = {
             'ws2182': 0,
             'sk6812': 1,
@@ -264,6 +299,9 @@ class FastBreakoutBoard:
         count_hex = Util.int_to_hex_string(light_count)
         offset_hex = Util.int_to_hex_string(offset)
         rgbw_overrides = ''  # Future: empty if none, else a comma and a list of hex addresses separated by commas
+        if type == 'mixed' and mixed_override_offsets:
+            for override_offset in mixed_override_offsets:
+                rgbw_overrides += f',{Util.int_to_hex_string(override_offset)}'
 
         ### Command: ER - @ Breakout address : port 0-3, type #, starting LED # hex, count hex[, rgbw-unit-address]
         ### Fresh board state is equivalent to ER:0,0,0,20  ER:1,0,20,20 etc
@@ -272,3 +310,9 @@ class FastBreakoutBoard:
         message = f'ER@{self.address}:{port_number},{type_number},{offset_hex},{count_hex}{rgbw_overrides}'
         self.log.debug("Sending LED port config to breakout. %s", message)
         self.communicator.send_with_confirmation(message, 'ER:P')
+
+    def _find_mixed_rgbw_offsets(self, port_number, type):
+        if type != 'mixed':
+            return None
+
+        return []  # TODO find LEDs on the port, find their chain-relative addresses, and list (as ints, not hex)

@@ -22,8 +22,8 @@ class TestFastExp(TestFastBase):
             'RA@880:000000': '',
             'ER@880:0,0,00,20': 'ER:P',
             'ER@880:1,0,20,20': 'ER:P',
-            'ER@880:2,0,40,20': 'ER:P',
-            'ER@880:3,0,60,20': 'ER:P',
+            'ER@880:2,1,40,10': 'ER:P',
+            'ER@880:3,2,50,30': 'ER:P',
 
             'RA@881:000000': '',
             'ER@881:0,0,00,20': 'ER:P',
@@ -58,10 +58,10 @@ class TestFastExp(TestFastBase):
             'ER@840:2,0,40,20': 'ER:P',
             'ER@840:3,0,60,20': 'ER:P',
             'RA@841:000000': '',
-            'ER@841:0,0,00,20': 'ER:P',
-            'ER@841:1,0,20,20': 'ER:P',
-            'ER@841:2,0,40,20': 'ER:P',
-            'ER@841:3,0,60,20': 'ER:P',
+            'ER@841:0,0,00,01': 'ER:P',
+            'ER@841:1,0,01,20': 'ER:P',
+            'ER@841:2,2,21,00': 'ER:P',
+            'ER@841:3,2,21,5F': 'ER:P',
 
             # set all lights off on neuron
             'RA@480:000000': '',
@@ -163,7 +163,7 @@ class TestFastExp(TestFastBase):
         self.exp_cpu.expected_commands = {
             'RD@880:0201ff123402121212': '',  # set individual lights on 0091
             'RD@881:0100ffffff': '',  # set individual lights on 0091
-            'RD@841:0160ffffff': ','  # set individual lights on 0081
+            'RD@841:0121ffffff': ','  # set individual lights on 0081
         }
 
         self.led1.on()
