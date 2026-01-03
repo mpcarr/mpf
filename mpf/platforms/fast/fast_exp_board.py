@@ -231,10 +231,11 @@ class FastBreakoutBoard:
 
     async def soft_reset(self):
         """Reset the breakout board."""
-        self.communicator.send_and_forget(f'RA@{self.address}:000000')
+        if self.features.get('led_ports'):
+            self.communicator.send_and_forget(f'RA@{self.address}:000000')
+            await asyncio.sleep(.03)
 
-        await asyncio.sleep(.03)
-        self._configure_led_headers()
+            self._configure_led_headers()
 
         # Should we do something with servos? TODO
         # TODO move this to mixin classes for device types?
