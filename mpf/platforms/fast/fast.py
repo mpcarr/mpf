@@ -609,6 +609,7 @@ class FastHardwarePlatform(ServoPlatform, LightsPlatform, RgbDmdPlatform,
 
         raise AssertionError(f"Unknown light subtype {subtype}")
 
+    # pylint: disable-msg=too-many-locals
     def _add_exp_led_with_config_format(self, parts, channel, name):
         exp_board = self.exp_boards_by_name[parts[0]]
 
@@ -708,10 +709,11 @@ class FastHardwarePlatform(ServoPlatform, LightsPlatform, RgbDmdPlatform,
         if port < 1:
             raise AssertionError(f"Port {port} is not valid for device {device_num}")
         if device_num > 64:
-            raise AssertionError(f"Device number {device_num} exceeds the number of devices on port ({devices_on_port})")
+            raise AssertionError(f"Device number {device_num} exceeds the number of devices on port (64)")
 
         return f'{(64 * (port - 1) + device_num - 1):02X}'
 
+    # pylint: disable-msg=too-many-arguments
     def port_idx_to_hex(self, port, device_num, devices_on_port, devices_on_previous_ports, name=None):
         """Converts port number and LED index into the proper FAST hex number.
 

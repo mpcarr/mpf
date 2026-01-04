@@ -672,6 +672,7 @@ fast_led_port:
     port: single|int|
     type: single|enum(ws2812,apa-102,sk6812,mixed)|ws2812
     count: single|int|32
+    rgbw_numbers: list|int|None  # only used with the "mixed" type
 fast_aud:
     port: list|str|auto
     baud: single|int|230400

@@ -57,12 +57,14 @@ fast:
           - port: 5
             count: 1
             type: ws2812
+            rgbw_numbers: 1, 999  # should be ignored as not a mixed type
           - port: 7
             count: 0
             type: mixed
           - port: 8
             count: 95
             type: mixed
+            rgbw_numbers: 1, 16, 17
       neuron:
         model: FP-EXP-2000
         breakouts:

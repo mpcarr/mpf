@@ -187,25 +187,33 @@ class FastExpansionBoard:
         self.communicator.set_led_fade_rate(self.address, rate)
 
     def led_port_definition(self, human_readable_port_number):
-        '''Looks up light port configuration for ports numbered: 1-8, or returns a default fallback.'''
-
-        port_information = {  # default configuration
+        """Looks up light port configuration for ports numbered: 1-8, or returns a default fallback."""
+        # default configuration
+        port_information = {
             'port': human_readable_port_number,
             'type': 'ws2812',
-            'count': 32
+            'count': 32,
+            'rgbw_override_indexes': None
         }
+
         led_port_configs = self.config['led_ports']
         if len(led_port_configs) > 0:
             for port_config in led_port_configs:
                 if int(port_config['port']) == int(human_readable_port_number):
-                    port_information['type'] = port_config['type']
+                    port_type = port_config['type']
+                    port_information['type'] = port_type
                     port_information['count'] = port_config['count']
+
+                    if port_type == 'mixed':
+                        zero_based_indexes = [idx - 1 for idx in port_config['rgbw_numbers']]
+                        port_information['rgbw_override_indexes'] = zero_based_indexes
+
                     break
 
         return port_information
 
     def light_count_on_port(self, human_readable_port_number):
-        '''Looks up the number of lights configured to be on a certain light port: 1-8.'''
+        """Looks up the number of lights configured to be on a certain light port: 1-8."""
         return self.led_port_definition(human_readable_port_number)['count']
 
 
@@ -267,6 +275,7 @@ class FastBreakoutBoard:
         port_count = self.features.get('led_ports')
         if port_count:
             return [self._led_port(internal_port_number) for internal_port_number in range(port_count)]
+        return None
 
     def _led_port(self, internal_port_number):
         human_readable_port_number = self.index * 4 + internal_port_number + 1
@@ -278,41 +287,40 @@ class FastBreakoutBoard:
         for port in self._led_ports():
             human_readable_port_number = port['port']
             internal_port_number = (human_readable_port_number - 1) % 4
-            type = port['type']
+            port_type = port['type']
             count = port['count']
             if count <= leds_available:
-                mixed_rgbw_offsets = self._find_mixed_rgbw_offsets(internal_port_number, type)
-                self._configure_led_header(internal_port_number, type, next_address, count, mixed_rgbw_offsets)
+                mixed_rgbw_offsets = port['rgbw_override_indexes']
+                self._configure_led_header(internal_port_number, port_type, next_address, count, mixed_rgbw_offsets)
                 leds_available -= count
                 next_address += count
             else:
-                raise Exception("Port tried to use too many leds, max per breakout is 128 leds")  #TODO improve message
+                raise AssertionError(f"Port {human_readable_port_number} exceeds LED limit of 128. Previously used: {128-leds_available} Additional requested: {count}")
 
-    def _configure_led_header(self, port_number, type, offset, light_count, mixed_override_offsets):
+    # pylint: disable-msg=too-many-arguments
+    def _configure_led_header(self, port_number, port_type, offset, light_count, mixed_override_offsets):
+        """Command: ER - @ Breakout address : port 0-3, type #, starting LED # hex, count hex[, rgbw-unit-address].
+
+        Fresh board state is equivalent to ER:0,0,0,20  ER:1,0,20,20 etc
+        The rgb-unit-address is any additional hex address numbers for a mixed chain where the unit should be set
+        to the command type (arg#2).
+        These addresses are based on the first address in the chain, so 0 means the same in the overall 128 light
+        address space as the offset_hex value
+        """
         type_number = {
             'ws2182': 0,
             'sk6812': 1,
             'mixed': 2,
             'apa102': 3,
-        }.get(type, 0)
+        }.get(port_type, 0)
 
         count_hex = Util.int_to_hex_string(light_count)
         offset_hex = Util.int_to_hex_string(offset)
         rgbw_overrides = ''  # Future: empty if none, else a comma and a list of hex addresses separated by commas
-        if type == 'mixed' and mixed_override_offsets:
+        if port_type == 'mixed' and mixed_override_offsets:
             for override_offset in mixed_override_offsets:
                 rgbw_overrides += f',{Util.int_to_hex_string(override_offset)}'
 
-        ### Command: ER - @ Breakout address : port 0-3, type #, starting LED # hex, count hex[, rgbw-unit-address]
-        ### Fresh board state is equivalent to ER:0,0,0,20  ER:1,0,20,20 etc
-        ### The rgb-unit-address is any additional hex address numbers for a mixed chain where the unit should be set to the command type (arg#2)
-        ### ^ are based on the first address in the chain, so 0 means the same in the overall 128 light address space as the offset_hex value
         message = f'ER@{self.address}:{port_number},{type_number},{offset_hex},{count_hex}{rgbw_overrides}'
         self.log.debug("Sending LED port config to breakout. %s", message)
         self.communicator.send_with_confirmation(message, 'ER:P')
-
-    def _find_mixed_rgbw_offsets(self, port_number, type):
-        if type != 'mixed':
-            return None
-
-        return []  # TODO find LEDs on the port, find their chain-relative addresses, and list (as ints, not hex)

@@ -61,7 +61,7 @@ class TestFastExp(TestFastBase):
             'ER@841:0,0,00,01': 'ER:P',
             'ER@841:1,0,01,20': 'ER:P',
             'ER@841:2,2,21,00': 'ER:P',
-            'ER@841:3,2,21,5F': 'ER:P',
+            'ER@841:3,2,21,5F,00,0F,10': 'ER:P',
 
             # set all lights off on neuron
             'RA@480:000000': '',
