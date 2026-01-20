@@ -8,6 +8,7 @@ from importlib import import_module
 from packaging import version
 
 from mpf.core.utility_functions import Util
+from mpf.exceptions.config_file_error import ConfigFileError
 from mpf.platforms.fast.fast_defines import (BREAKOUT_FEATURES,
                                              EXPANSION_BOARD_FEATURES)
 
@@ -134,7 +135,7 @@ class FastExpansionBoard:
                                            f'Actual: {firmware_version}. Update at fastpinball.com/firmware')
 
             if product_id != self.model:
-                raise AssertionError(f"Expected {self.model} but got {id_string} from {self}")
+                raise ConfigFileError(f"Expected {self.model} but got {id_string} from {self}", 1, self.log.name)
             self.hw_verified = True
 
     async def reset(self):
@@ -295,7 +296,9 @@ class FastBreakoutBoard:
                 leds_available -= count
                 next_address += count
             else:
-                raise AssertionError(f"Port {human_readable_port_number} exceeds LED limit of 128. Previously used: {128-leds_available} Additional requested: {count}")
+                raise ConfigFileError(f"Port {human_readable_port_number} exceeds LED limit of 128."
+                                      "Previously used: {128-leds_available} Additional requested: {count}",
+                                      2, self.log.name)
 
     # pylint: disable-msg=too-many-arguments
     def _configure_led_header(self, port_number, port_type, offset, light_count, mixed_override_offsets):
