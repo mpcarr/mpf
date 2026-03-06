@@ -216,6 +216,74 @@ class TestRandomizer(MpfTestCase):
         self.assertEqual(50, results.count('2'))
         self.assertEqual(0, results.count('foo'))
 
+    def test_fallback_value_nonrandom(self):
+        # when condition for all items is false, always fall back
+        r = Randomizer([
+                '1{False}',
+                '2{False}',
+            ], self.machine)
+        r.fallback_value = "foo"
+        r.disable_random = True
+
+        results = list()
+        for x in range(10):
+            results.append(next(r))
+
+        self.assertEqual(0, results.count('1'))
+        self.assertEqual(0, results.count('2'))
+        self.assertEqual(10, results.count('foo'))
+
+        # last item is used when all conditional items are false and no fallback is given
+        r = Randomizer([
+                '1{False}',
+                '2{False}',
+                '3{False}',
+            ], self.machine)
+        r.disable_random = True
+
+        results = list()
+        for x in range(10):
+            results.append(next(r))
+
+        self.assertEqual(0, results.count('1'))
+        self.assertEqual(0, results.count('2'))
+        self.assertEqual(10, results.count('3'))
+
+    def test_conditionals_dynamic_updating_no_random(self):
+        # conditionals should loop properly when conditional values change between draws
+        r = Randomizer([
+                '1{machine.foo == 0}',
+                '2{machine.foo == 0}',
+            ],
+                self.machine,
+                template_type="event"
+        )
+        r.fallback_value = "bar"
+        r.disable_random = True
+
+        self.machine.variables.set_machine_var('foo', 0)
+        for i in range(10):
+            self.assertEqual(next(r), '1')
+            self.assertEqual(next(r), '2')
+
+        self.machine.variables.set_machine_var('foo', 1)
+        for i in range(10):
+            self.assertEqual(next(r), 'bar')
+
+        self.machine.variables.set_machine_var('foo', 0)
+        for i in range(10):
+            self.assertEqual(next(r), '1')
+            self.assertEqual(next(r), '2')
+
+        self.machine.variables.set_machine_var('foo', 1)
+        for i in range(10):
+            self.assertEqual(next(r), 'bar')
+
+        self.machine.variables.set_machine_var('foo', 0)
+        for i in range(10):
+            self.assertEqual(next(r), '1')
+            self.assertEqual(next(r), '2')
+
     def test_weights(self):
         # Case 1 - double-weight to one option skews true random draws
         items = [

@@ -109,6 +109,7 @@ class Randomizer:
     def _next_not_random(self, conditional_args):
         total_items = len(self.items)
         current_item_index = self.data['current_item_index']
+
         if current_item_index >= total_items:
             if not self.loop:
                 raise StopIteration
@@ -118,12 +119,19 @@ class Randomizer:
         next_item_index = current_item_index
 
         rotated_option_list = self.items[next_item_index:] + self.items[:next_item_index]
+        found_it = False
         while len(rotated_option_list):
             next_item = rotated_option_list.pop(0)
             next_item_index += 1
             event = next_item[0]
             if not event.condition or (self._template_type and event.condition.evaluate(conditional_args)):
+                found_it = True
                 break
+
+        if not found_it and self.fallback_value:
+            self.data['current_item'] = self.fallback_value
+            self.data['current_item_index'] = 0
+            return self.fallback_value
 
         self.data['current_item'] = next_item
         self.data['current_item_index'] = next_item_index

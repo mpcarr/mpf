@@ -10,14 +10,17 @@ PyPI.
 
 """
 
-__version__ = '0.57.5.dev1'  # Also consider whether MPF-MC pyproject.toml should be updated
+__version__ = '0.80.0.dev13'
 '''The full version of MPF.'''
 
-__short_version__ = '0.58'
+__short_version__ = '0.80'
 '''The major.minor version of MPF.'''
 
 __bcp_version__ = '1.1'
 '''The version of BCP this build of MPF uses.'''
+
+__gmc_version__ = '0.1.6'
+'''The version of GMC this build of MPF requires.'''
 
 __config_version__ = '6'
 '''The config file version this build of MPF uses.'''
