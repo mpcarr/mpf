@@ -261,8 +261,11 @@ class FastSerialCommunicator(LogMixin):
                 Typically used with binary messages so the longs can contain human readable versions.
                 Defaults to None which means the actual msg will be used in the logs.
         """
+        self.log.debug("MCDebug: Before no response wait")
         await self.no_response_waiting.wait()
+        self.log.debug("MCDebug: After no response wait")
         self.no_response_waiting.clear()
+        self.log.debug("MCDebug: After no response clear")
         self.send_with_confirmation(msg, pause_sending_until, log_msg)
 
     # pylint: disable-msg=too-many-arguments
