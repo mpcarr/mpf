@@ -282,16 +282,19 @@ class MachineController(LogMixin):
 
     async def _run_init_phases(self) -> None:
         """Run init phases."""
+        self.debug_log("MCDebug: Pre Init Phase 1")
         await self.events.post_queue_async("init_phase_1")
         '''event: init_phase_1
 
         desc: Posted during the initial boot up of MPF.
         '''
+        self.debug_log("MCDebug: Pre Init Phase 2")
         await self.events.post_queue_async("init_phase_2")
         '''event: init_phase_2
 
         desc: Posted during the initial boot up of MPF.
         '''
+        self.debug_log("MCDebug: Pre Init Phase 3")
         self._load_plugins()
         await self.events.post_queue_async("init_phase_3")
         '''event: init_phase_3
@@ -299,13 +302,13 @@ class MachineController(LogMixin):
         desc: Posted during the initial boot up of MPF.
         '''
         self._load_custom_code()
-
+        self.debug_log("MCDebug: Pre Init Phase 4")
         await self.events.post_queue_async("init_phase_4")
         '''event: init_phase_4
 
         desc: Posted during the initial boot up of MPF.
         '''
-
+        self.debug_log("MCDebug: Pre Init Phase 5")
         await self.events.post_queue_async("init_phase_5")
         '''event: init_phase_5
 
@@ -314,6 +317,7 @@ class MachineController(LogMixin):
 
     def _init_phases_complete(self, **kwargs) -> None:
         """Cleanup after init and remove boot holds."""
+        self.debug_log("MCDebug: Phase Complete")
         del kwargs
         self.events.remove_all_handlers_for_event("init_phase_1")
         self.events.remove_all_handlers_for_event("init_phase_2")
