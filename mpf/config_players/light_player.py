@@ -46,7 +46,7 @@ class LightPlayer(DeviceConfigPlayer):
         print(f"LED test index {self._led_test_index}")
 
         self._led_test_index += 1
-        self._led_test_delay.add(ms=ms, callback=self._run_led_order_test_step, ms=ms)
+        self._led_test_delay.add(ms=ms, callback=self._run_led_order_test_step)
 
     # pylint: disable-msg=too-many-locals
     def play(self, settings, context, calling_context, priority=0, **kwargs):
