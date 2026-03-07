@@ -99,9 +99,10 @@ class FastExpansionBoard:
         """
         self.log.info('Verifying hardware for %s with ID string "%s", board address %s',
                       self, id_string, active_board)
-
+        self.log.info('MCDebug: Start new log')
         exp_board = active_board[:2]
         brk_board = active_board[2:]  # will be empty if we got a 2-digit address for an EXP board
+
 
         try:
             _, product_id, firmware_version = id_string.split()
@@ -137,6 +138,8 @@ class FastExpansionBoard:
             if product_id != self.model:
                 raise ConfigFileError(f"Expected {self.model} but got {id_string} from {self}", 1, self.log.name)
             self.hw_verified = True
+
+            
 
     async def reset(self):
         """Send a reset command to the EXP board."""
