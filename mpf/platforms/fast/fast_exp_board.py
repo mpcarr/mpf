@@ -102,7 +102,7 @@ class FastExpansionBoard:
         self.log.info('MCDebug: Start new log')
         exp_board = active_board[:2]
         brk_board = active_board[2:]  # will be empty if we got a 2-digit address for an EXP board
-
+        self.log.info('MCDebug: Start new log 1')
 
         try:
             _, product_id, firmware_version = id_string.split()
@@ -112,10 +112,14 @@ class FastExpansionBoard:
                 raise AssertionError(f'Breakout {brk_board} on {self} is not responding') from e
             raise AssertionError(f'Invalid ID string {id_string} from {self}') from e
 
+        self.log.info('MCDebug: Start new log 2')
+
         assert exp_board == self.address
         self.firmware_version = firmware_version
 
+        self.log.info('MCDebug: Start new log 3')
         if brk_board:
+            self.log.info('MCDebug: Start new log 4a')
             if version.parse(firmware_version) < version.parse(self.breakouts[brk_board].features['min_fw']):
                 self.log.error('Firmware on breakout board %s is too old. Required: %s, Actual: %s. '
                                'Update at fastpinball.com/firmware',
@@ -124,10 +128,13 @@ class FastExpansionBoard:
                                            f'Required: {self.breakouts[brk_board].features["min_fw"]}, '
                                            f'Actual: {firmware_version}. Update at fastpinball.com/firmware')
 
+
+            self.log.info('MCDebug: Start new log 5a')
             brk = self.breakouts[brk_board]
             brk.hw_verified = True
 
         else:
+            self.log.info('MCDebug: Start new log 4b')
             if version.parse(firmware_version) < version.parse(self.features['min_fw']):
                 self.log.error('Firmware on %s is too old. Required: %s, Actual: %s. '
                                'Update at fastpinball.com/firmware',
@@ -135,11 +142,13 @@ class FastExpansionBoard:
                 self.platform.machine.stop(f'Firmware on {self} is too old. Required: {self.features["min_fw"]}, '
                                            f'Actual: {firmware_version}. Update at fastpinball.com/firmware')
 
+            self.log.info('MCDebug: Start new log 5b')
             if product_id != self.model:
                 raise ConfigFileError(f"Expected {self.model} but got {id_string} from {self}", 1, self.log.name)
             self.hw_verified = True
 
             
+        self.log.info('MCDebug: Start new log 6')
 
     async def reset(self):
         """Send a reset command to the EXP board."""
