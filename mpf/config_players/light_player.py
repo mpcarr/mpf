@@ -18,14 +18,14 @@ class LightPlayer(DeviceConfigPlayer):
     _led_test_delay = None
     _led_test_index = 0
     lights = []
-    __slots__ = []  # type: List[str]
+    __slots__ = ["_led_test_delay", "_led_test_index", "lights"]  # type: List[str]
 
 
     def start_led_order_test(self, ms=250):
         """Light one LED at a time so the physical wiring order can be recorded."""
         self._led_test_index = 0
         self._led_test_delay = DelayManager(self.machine)
-        self.lights = self.machine.lights
+        self.lights = list(self.machine.lights.values())
         self._run_led_order_test_step(ms)
 
     def _run_led_order_test_step(self, ms):
@@ -46,7 +46,7 @@ class LightPlayer(DeviceConfigPlayer):
         print(f"LED test index {self._led_test_index}")
 
         self._led_test_index += 1
-        self._led_test_delay.add(ms=ms, callback=self._run_led_order_test_step)
+        self._led_test_delay.add(ms=ms,callback=self._run_led_order_test_step,kwargs={"ms": ms})
 
     # pylint: disable-msg=too-many-locals
     def play(self, settings, context, calling_context, priority=0, **kwargs):
@@ -57,7 +57,8 @@ class LightPlayer(DeviceConfigPlayer):
         start_time = kwargs.get("start_time", None)
 
 
-        self.start_led_order_test()
+        if not self._led_test_delay:
+            self.start_led_order_test()
 
 
 
