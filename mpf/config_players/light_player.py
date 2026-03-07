@@ -15,9 +15,6 @@ class LightPlayer(DeviceConfigPlayer):
     show_section = 'lights'
     machine_collection_name = 'lights'
     allow_placeholders_in_keys = True
-    _led_test_delay = None
-    _led_test_index = 0
-    lights = []
     __slots__ = ["_led_test_delay", "_led_test_index", "lights"]  # type: List[str]
 
 
