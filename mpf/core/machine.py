@@ -317,7 +317,7 @@ class MachineController(LogMixin):
 
     def _init_phases_complete(self, **kwargs) -> None:
         """Cleanup after init and remove boot holds."""
-        self.debug_log("MCDebug: Phase Complete")
+        self.debug_log("MCDebug: Init Phases Complete")
         del kwargs
         self.events.remove_all_handlers_for_event("init_phase_1")
         self.events.remove_all_handlers_for_event("init_phase_2")

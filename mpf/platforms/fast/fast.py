@@ -140,6 +140,8 @@ class FastHardwarePlatform(ServoPlatform, LightsPlatform, RgbDmdPlatform,
 
         for comm in self.serial_connections.values():
             await comm.soft_reset()
+        
+        self.debug_log("Finished Soft Reset")
 
     def _init_complete(self, **kwargs):
         del kwargs
