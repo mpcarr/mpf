@@ -295,6 +295,8 @@ class FastSerialCommunicator(LogMixin):
         while max_retries == -1 or retries <= max_retries:
             try:
                 self.log.debug("MCDebug: Sending and waiting for response to EXP BOARD")
+                self.log.debug("MCDebug: Sending Message %s", msg)
+                self.log.debug("MCDebug: Sending Timeout %s", timeout)
                 await asyncio.wait_for(self.send_and_wait_for_response(msg, pause_sending_until,
                                                                        log_msg), timeout=timeout)
                 break
