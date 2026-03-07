@@ -47,6 +47,8 @@ class FastExpCommunicator(FastSerialCommunicator):
         """Stop listening to the board and clear it."""
         for board in self.exp_boards_by_address.values():
             board.communicator.send_and_forget(f'BR@{board.address}:')
+        for board in self.exp_boards_by_address.values():
+            board.communicator.send_and_forget(f'BR@{board.address}:')
 
     async def soft_reset(self):
         """Trigger a soft reset for the board and all breakouts."""
