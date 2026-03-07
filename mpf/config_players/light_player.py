@@ -18,6 +18,13 @@ class LightPlayer(DeviceConfigPlayer):
     __slots__ = ["_led_test_delay", "_led_test_index", "lights"]  # type: List[str]
 
 
+    def __init__(self, machine):
+        super().__init__(machine)
+
+        self._led_test_delay = None
+        self._led_test_index = 0
+        self.lights = []
+
     def start_led_order_test(self, ms=250):
         """Light one LED at a time so the physical wiring order can be recorded."""
         self._led_test_index = 0
