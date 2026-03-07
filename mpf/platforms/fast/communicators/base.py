@@ -294,6 +294,7 @@ class FastSerialCommunicator(LogMixin):
 
         while max_retries == -1 or retries <= max_retries:
             try:
+                self.log.debug("MCDebug: Sending and waiting for response to EXP BOARD")
                 await asyncio.wait_for(self.send_and_wait_for_response(msg, pause_sending_until,
                                                                        log_msg), timeout=timeout)
                 break
@@ -309,6 +310,7 @@ class FastSerialCommunicator(LogMixin):
         This is used in conjunction with send_and_wait_for_response_processed().
         May be called safely if there's no wait to release.
         """
+        self.log.debug("MCDebug: Done waiting SET")
         self.done_waiting.set()
 
     def send_with_confirmation(self, msg, pause_sending_until, log_msg=None):
