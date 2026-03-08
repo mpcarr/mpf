@@ -30,6 +30,14 @@ class LightPlayer(DeviceConfigPlayer):
         self._led_test_index = 0
         self._led_test_delay = DelayManager(self.machine)
         self.lights = list(self.machine.lights.values())
+
+            #Magic order for 2 digit NeoSeg displays from CobraPin
+        order = [5, 0, 3, 22, 25, 29, 26, 1, 28, 27, 21, 2, 23, 24, 4,
+                    14, 16, 19, 6, 9, 13, 10, 17, 12, 11, 15, 18, 7, 8, 20]
+    
+        self.lights = [self.lights[i] for i in order]
+
+
         self._run_led_order_test_step()
 
     def _run_led_order_test_step(self):
@@ -41,6 +49,8 @@ class LightPlayer(DeviceConfigPlayer):
         if self._led_test_index >= len(self.lights):
             self.debug_log("LED order test complete")
             return
+
+
 
         # Light current LED
         self.lights[self._led_test_index].color("white")
