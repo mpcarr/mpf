@@ -4,7 +4,6 @@ from typing import List
 from mpf.config_players.device_config_player import DeviceConfigPlayer
 from mpf.core.rgb_color import RGBColor, ColorException
 from mpf.core.utility_functions import Util
-from mpf.core.delays import DelayManager
 
 
 class LightPlayer(DeviceConfigPlayer):
@@ -15,52 +14,8 @@ class LightPlayer(DeviceConfigPlayer):
     show_section = 'lights'
     machine_collection_name = 'lights'
     allow_placeholders_in_keys = True
-    __slots__ = ["_led_test_delay", "_led_test_index", "lights"]  # type: List[str]
 
-
-    def __init__(self, machine):
-        super().__init__(machine)
-
-        self._led_test_delay = None
-        self._led_test_index = 0
-        self.lights = []
-
-    def start_led_order_test(self):
-        """Light one LED at a time so the physical wiring order can be recorded."""
-        self._led_test_index = 0
-        self._led_test_delay = DelayManager(self.machine)
-        self.lights = list(self.machine.lights.values())
-
-            #Magic order for 2 digit NeoSeg displays from CobraPin
-        order = [5, 0, 3, 22, 25, 29, 26, 1, 28, 27, 21, 2, 23, 24, 4,
-                    14, 16, 19, 6, 9, 13, 10, 17, 12, 11, 15, 18, 7, 8, 20]
-    
-        self.lights = [self.lights[i] for i in order]
-
-
-        self._run_led_order_test_step()
-
-    def _run_led_order_test_step(self):
-        # Turn all LEDs off
-        for light in self.lights:
-            light.color("off")
-
-        # Stop if finished
-        if self._led_test_index >= len(self.lights):
-            self.debug_log("LED order test complete")
-            return
-
-
-
-        # Light current LED
-        self.lights[self._led_test_index].color("white")
-        #self.debug_log("LED test index %s", self._led_test_index)
-
-        # If you want it in the console too:
-        print(f"LED test index {self._led_test_index}")
-
-        self._led_test_index += 1
-        self._led_test_delay.add(ms=250,callback=self._run_led_order_test_step)
+    __slots__ = []  # type: List[str]
 
     # pylint: disable-msg=too-many-locals
     def play(self, settings, context, calling_context, priority=0, **kwargs):
@@ -69,14 +24,6 @@ class LightPlayer(DeviceConfigPlayer):
         instance_dict = self._get_instance_dict(context)
         full_context = self._get_full_context(context + key)
         start_time = kwargs.get("start_time", None)
-
-
-        if not self._led_test_delay:
-            self.start_led_order_test()
-
-
-
-        return
 
         for light, s in settings.items():
             final_priority = s["priority"]
