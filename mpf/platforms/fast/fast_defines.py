@@ -53,7 +53,7 @@ EXPANSION_BOARD_FEATURES = {
     },
     'FP-EXP-0081': {
         'min_fw': '0.48',
-        'local_breakouts': ['FP-EXP-0081'],
+        'local_breakouts': ['FP-EXP-0081', 'FP-EXP-0081'],
         'breakout_ports': 0,
         'default_address': '84'
     },
