@@ -134,7 +134,7 @@ class FastSerialCommunicator(LogMixin):
 
         await self.clear_board_serial_buffer()
 
-        self.ignore_decode_errors = False
+        #self.ignore_decode_errors = False
 
         self.write_task = asyncio.create_task(self._socket_writer())
         self.write_task.add_done_callback(Util.raise_exceptions)
