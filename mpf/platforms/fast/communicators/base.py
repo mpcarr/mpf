@@ -364,7 +364,7 @@ class FastSerialCommunicator(LogMixin):
                     return
 
                 self.log.warning("Interference / bad data received: %s", msg)
-                return
+                continue
                 if not self.ignore_decode_errors:
                     raise
 
