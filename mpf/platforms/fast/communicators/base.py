@@ -355,7 +355,8 @@ class FastSerialCommunicator(LogMixin):
 
             if not msg:
                 continue
-
+            
+            self.log.info("Received raw bytes: %s", msg)
             try:
                 msg = msg.decode()
             except UnicodeDecodeError:
@@ -370,6 +371,7 @@ class FastSerialCommunicator(LogMixin):
             if self.port_debug:
                 self.log.info("<<<< %s", msg)
 
+            self.log.info("Dispatching message: %s", msg)
             self._dispatch_incoming_msg(msg)
 
     def _dispatch_incoming_msg(self, msg):
