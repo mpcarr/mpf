@@ -354,9 +354,10 @@ class FastSerialCommunicator(LogMixin):
             if not raw_msg:
                 continue
 
-            self.log.warning("Received raw serial message: %r", raw_msg)
+            self.log.info("Received raw serial message")
             decoded_msg = self._sanitize_and_decode_fast_msg(raw_msg)
             if decoded_msg is None:
+                self.log.info("decode msg is none")
                 if self.machine.is_shutting_down:
                     return
 
@@ -368,6 +369,7 @@ class FastSerialCommunicator(LogMixin):
             if self.port_debug:
                 self.log.info("<<<< %s", decoded_msg)
 
+            self.log.info("disptaching msg: %s", decoded_msg)
             self._dispatch_incoming_msg(decoded_msg)
 
 
@@ -377,6 +379,8 @@ class FastSerialCommunicator(LogMixin):
             return None
 
         # Preferred: recover from known FAST prefixes
+        self.log.info("trying to strip junk bytes")
+
         prefixes = (b"EXP ", b"BRK ", b"ID:", b"NN:", b"SA:", b"CH:", b"RX:", b"XX:")
         for prefix in prefixes:
             idx = raw_msg.find(prefix)
@@ -399,8 +403,10 @@ class FastSerialCommunicator(LogMixin):
 
         candidate = raw_msg[start:]
         try:
+            self.log.info("trying to decode stripped candidate msg")
             return candidate.decode("ascii")
         except Exception:
+            self.log.info("stripping failed returning none")
             return None
 
     def _dispatch_incoming_msg(self, msg):
