@@ -337,6 +337,7 @@ class FastSerialCommunicator(LogMixin):
     def send_bytes(self, msg, log_msg):
         """Send a raw list of bytes to the communicator."""
         # Forcing log_msg since bytes are not human readable
+        self.log.info("Sending raw bytes: %s", log_msg)
         self.send_queue.put_nowait((msg, None, log_msg))
 
     def parse_incoming_raw_bytes(self, msg):
@@ -355,7 +356,7 @@ class FastSerialCommunicator(LogMixin):
 
             if not msg:
                 continue
-            
+
             self.log.info("Received raw bytes: %s", msg)
             try:
                 msg = msg.decode()
