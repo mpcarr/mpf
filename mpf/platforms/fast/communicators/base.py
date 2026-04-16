@@ -358,7 +358,7 @@ class FastSerialCommunicator(LogMixin):
 
             try:
                 print("MCDEBUG1: About to decode raw_msg:", raw_msg)
-                decoded_msg = raw_msg.decode("utf-8")
+                decoded_msg = raw_msg.decode()
             except UnicodeDecodeError:
                 print("MCDEBUG2: Caught UnicodeDecodeError for raw_msg:", raw_msg)
                 if self.machine.is_shutting_down:
@@ -401,7 +401,7 @@ class FastSerialCommunicator(LogMixin):
         cleaned = raw_msg[start:]
 
         try:
-            return cleaned.decode("ascii")
+            return cleaned.decode()
         except UnicodeDecodeError:
             return None
 
