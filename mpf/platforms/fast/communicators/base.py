@@ -377,7 +377,7 @@ class FastSerialCommunicator(LogMixin):
             if self.port_debug:
                 self.log.info("<<<< %s", msg)
 
-            self.log.info("Dispatching message: %s", msg)
+            #self.log.info("Dispatching message: %s", msg)
             self._dispatch_incoming_msg(msg)
 
     def _sanitize_and_decode_fast_msg(self, raw_msg):
