@@ -354,6 +354,7 @@ class FastSerialCommunicator(LogMixin):
             if not raw_msg:
                 continue
 
+            self.log.warning("Received raw serial message: %r", raw_msg)
             decoded_msg = self._sanitize_and_decode_fast_msg(raw_msg)
             if decoded_msg is None:
                 if self.machine.is_shutting_down:
