@@ -357,9 +357,10 @@ class FastSerialCommunicator(LogMixin):
                 continue
 
             try:
+                print("MCDEBUG1: About to decode raw_msg:", raw_msg)
                 decoded_msg = raw_msg.decode("utf-8")
-
             except UnicodeDecodeError:
+                print("MCDEBUG2: Caught UnicodeDecodeError for raw_msg:", raw_msg)
                 if self.machine.is_shutting_down:
                     return
 
