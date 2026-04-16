@@ -322,7 +322,7 @@ class FastSerialCommunicator(LogMixin):
             pause_sending_until (_type_): _description_
             log_msg (_type_, optional): _description_. Defaults to None.
         """
-        self.log.info("Waiting for response to %s before sending next message.", msg)
+        #self.log.info("Waiting for response to %s before sending next message.", msg)
         if log_msg:
             self.send_queue.put_nowait((f'{msg}\r'.encode(), pause_sending_until, log_msg))
         else:
@@ -338,7 +338,7 @@ class FastSerialCommunicator(LogMixin):
     def send_bytes(self, msg, log_msg):
         """Send a raw list of bytes to the communicator."""
         # Forcing log_msg since bytes are not human readable
-        self.log.info("Sending raw bytes: %s", log_msg)
+        #self.log.info("Sending raw bytes: %s", log_msg)
         self.send_queue.put_nowait((msg, None, log_msg))
 
     def parse_incoming_raw_bytes(self, msg):
@@ -358,7 +358,7 @@ class FastSerialCommunicator(LogMixin):
             if not msg:
                 continue
 
-            self.log.info("Received raw bytes: %s", msg)
+            #self.log.info("Received raw bytes: %s", msg)
             try:
                 msg = msg.decode()
             except UnicodeDecodeError:

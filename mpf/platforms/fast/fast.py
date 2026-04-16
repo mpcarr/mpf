@@ -597,10 +597,6 @@ class FastHardwarePlatform(ServoPlatform, LightsPlatform, RgbDmdPlatform,
             parts, channel = number.lower().rsplit('-', 1)
             # split into board name, breakout, port, led
             parts = parts.split('-')
-            
-            self.log.debug("McDebug: %s", parts)
-            self.log.debug("McDebug: %s", channel)
-            self.log.debug("McDebug: %s", config.name)
 
             if parts[0] in self.exp_boards_by_name:  # this is an expansion board LED in config file format
                 return self._add_exp_led_with_config_format(parts, channel, config.name)
