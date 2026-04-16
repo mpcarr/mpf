@@ -322,6 +322,7 @@ class FastSerialCommunicator(LogMixin):
             pause_sending_until (_type_): _description_
             log_msg (_type_, optional): _description_. Defaults to None.
         """
+        self.log.info("Waiting for response to %s before sending next message.", msg)
         if log_msg:
             self.send_queue.put_nowait((f'{msg}\r'.encode(), pause_sending_until, log_msg))
         else:
