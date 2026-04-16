@@ -350,60 +350,27 @@ class FastSerialCommunicator(LogMixin):
             if pos == -1:
                 break
 
-            raw_msg = self.received_msg[:pos]
+            msg = self.received_msg[:pos]
             self.received_msg = self.received_msg[pos + 1:]
 
-            if not raw_msg:
+            if not msg:
                 continue
 
             try:
-                print("MCDEBUG1: About to decode raw_msg:", raw_msg)
-                decoded_msg = raw_msg.decode("utf-8", errors="strict")
-            except Exception as e:
-                print("MCDEBUG2: Caught UnicodeDecodeError for raw_msg:", raw_msg)
+                msg = msg.decode()
+            except UnicodeDecodeError:
+
                 if self.machine.is_shutting_down:
                     return
 
-                self.log.warning("Interference / bad data received: %r", raw_msg)
-
-                # Try to recover by stripping leading non-printable / non-ASCII bytes
-                recovered = self._recover_fast_message(raw_msg)
-
-                if recovered is None:
-                    self.log.warning("Could not recover message: %r", raw_msg)
-                    if not self.ignore_decode_errors:
-                        raise
-                    continue
-
-                self.log.warning("Recovered message after stripping bad data: %s", recovered)
-                decoded_msg = recovered
+                self.log.warning("Interference / bad data received: %s", msg)
+                if not self.ignore_decode_errors:
+                    raise
 
             if self.port_debug:
-                self.log.info("<<<< %s", decoded_msg)
+                self.log.info("<<<< %s", msg)
 
-            self._dispatch_incoming_msg(decoded_msg)
-
-    def _recover_fast_message(self, raw_msg):
-        """Attempt to recover a FAST serial message with junk leading bytes."""
-        if not raw_msg:
-            return None
-
-        # Strip leading bytes until first printable ASCII character
-        start = None
-        for i, b in enumerate(raw_msg):
-            if 32 <= b <= 126:
-                start = i
-                break
-
-        if start is None:
-            return None
-
-        cleaned = raw_msg[start:]
-
-        try:
-            return cleaned.decode()
-        except UnicodeDecodeError:
-            return None
+            self._dispatch_incoming_msg(msg)
 
     def _dispatch_incoming_msg(self, msg):
         # Figures out what to do with incoming messages
