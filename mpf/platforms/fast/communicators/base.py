@@ -345,69 +345,32 @@ class FastSerialCommunicator(LogMixin):
 
         while True:
             pos = self.received_msg.find(b'\r')
+
+            # no more complete messages
             if pos == -1:
                 break
 
-            raw_msg = self.received_msg[:pos]
+            msg = self.received_msg[:pos]
             self.received_msg = self.received_msg[pos + 1:]
 
-            if not raw_msg:
+            if not msg:
                 continue
 
-            self.log.info("Received raw serial message")
-            decoded_msg = self._sanitize_and_decode_fast_msg(raw_msg)
-            if decoded_msg is None:
-                self.log.info("decode msg is none")
+            try:
+                msg = msg.decode()
+            except UnicodeDecodeError:
+
                 if self.machine.is_shutting_down:
                     return
 
-                self.log.warning("Dropping bad serial message: %r", raw_msg)
+                self.log.warning("Interference / bad data received: %s", msg)
                 if not self.ignore_decode_errors:
-                    continue
-                continue
+                    raise
 
             if self.port_debug:
-                self.log.info("<<<< %s", decoded_msg)
+                self.log.info("<<<< %s", msg)
 
-            self.log.info("disptaching msg: %s", decoded_msg)
-            self._dispatch_incoming_msg(decoded_msg)
-
-
-    def _sanitize_and_decode_fast_msg(self, raw_msg):
-        """Strip leading junk bytes and decode a FAST message safely."""
-        if not raw_msg:
-            return None
-
-        # Preferred: recover from known FAST prefixes
-        self.log.info("trying to strip junk bytes")
-
-        prefixes = (b"EXP ", b"BRK ", b"ID:", b"NN:", b"SA:", b"CH:", b"RX:", b"XX:")
-        for prefix in prefixes:
-            idx = raw_msg.find(prefix)
-            if idx != -1:
-                candidate = raw_msg[idx:]
-                try:
-                    return candidate.decode("ascii")
-                except Exception:
-                    return None
-
-        # Fallback: first printable ASCII byte
-        start = None
-        for i, b in enumerate(raw_msg):
-            if 32 <= b <= 126:
-                start = i
-                break
-
-        if start is None:
-            return None
-
-        candidate = raw_msg[start:]
-        try:
-            self.log.info("trying to decode stripped candidate msg")
-            return candidate.decode("ascii")
-        except Exception:
-            self.log.info("stripping failed returning none")
-            return None
+            self._dispatch_incoming_msg(msg)
 
     def _dispatch_incoming_msg(self, msg):
         # Figures out what to do with incoming messages
