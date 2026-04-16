@@ -367,14 +367,52 @@ class FastSerialCommunicator(LogMixin):
                     return
 
                 self.log.warning("Interference / bad data received: %s", msg)
-                if not self.ignore_decode_errors:
-                    raise
+                newMsg = self._sanitize_and_decode_fast_msg(msg)
+                if newMsg:
+                    msg = newMsg
+                else:
+                    if not self.ignore_decode_errors:
+                        raise
 
             if self.port_debug:
                 self.log.info("<<<< %s", msg)
 
             self.log.info("Dispatching message: %s", msg)
             self._dispatch_incoming_msg(msg)
+
+        def _sanitize_and_decode_fast_msg(self, raw_msg):
+            self.log.info("Sanitizing raw message: %s", raw_msg)
+            if not raw_msg:
+                return None
+
+            valid_prefixes = (b"ID:", b"ER:", b"BR:", b"CH:", b"NN:", b"SA:", b"RX:", b"XX:")
+
+            best_idx = None
+            for prefix in valid_prefixes:
+                idx = raw_msg.find(prefix)
+                if idx != -1 and (best_idx is None or idx < best_idx):
+                    best_idx = idx
+
+            if best_idx is None:
+                return None
+
+            candidate = raw_msg[best_idx:]
+
+            try:
+                decoded = candidate.decode("ascii")
+            except UnicodeDecodeError:
+                return None
+
+            if ":" not in decoded:
+                return None
+
+            prefix = decoded.split(":", 1)[0] + ":"
+            if prefix not in {"ID:", "ER:", "BR:", "CH:", "NN:", "SA:", "RX:", "XX:"}:
+                return None
+
+            self.log.info("Cleaned and decoded message: %s", decoded)
+            return decoded
+
 
     def _dispatch_incoming_msg(self, msg):
         # Figures out what to do with incoming messages
