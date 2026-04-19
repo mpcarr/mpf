@@ -143,6 +143,11 @@ class LightPlayer(DeviceConfigPlayer):
             # its individual components
             composite_value = value.split('-f')
             value = composite_value[0]
-            fade = Util.string_to_ms(composite_value[1])
+        
+            fade_value = composite_value[1].strip()
+            if fade_value.startswith('(') and fade_value.endswith(')'):
+                fade = fade_value
+            else:
+                fade = Util.string_to_ms(fade_value)
 
         return dict(color=value, fade=fade)
